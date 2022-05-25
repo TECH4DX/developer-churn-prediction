@@ -2,17 +2,17 @@ from open_search import get_index_content
 import data_transformation
 
 
-def get_table(table_name, recent_days):
+def get_table(table_name, day_start_before, day_end_before):
     if table_name == 'churn_search_repos_final':
         # Get the related data from OpenSeaerch
-        churn_search_repos_final = get_index_content('gitee_repo-raw', recent_days, ["data.full_name", "data.id", "data.created_at"])
+        churn_search_repos_final = get_index_content('gitee_repo-raw', day_start_before, day_end_before, ["data.full_name", "data.id", "data.created_at"])
         # Raw data schema transformation
         churn_search_repos_final = data_transformation.churn_search_repos_final_format(churn_search_repos_final)
 
         return churn_search_repos_final
 
     elif table_name == 'repo_issue' or table_name == 'repo_issue_comment':
-        repo_issue_and_repo_issue_comment = get_index_content('gitee_issues-raw', recent_days, ["data.repository.id", "data.id", "data.number", "data.created_at", "data.user.id", "data.issue_state", "data.comments_data.id", "data.comments_data.created_at", "data.comments_data.user.id"])  # author_association，该字段可暂时不使用，但我这里要留个位置。
+        repo_issue_and_repo_issue_comment = get_index_content('gitee_issues-raw', day_start_before, day_end_before, ["data.repository.id", "data.id", "data.number", "data.created_at", "data.user.id", "data.issue_state", "data.comments_data.id", "data.comments_data.created_at", "data.comments_data.user.id"])  # author_association，该字段可暂时不使用，但我这里要留个位置。
         repo_issue, repo_issue_comment = data_transformation.repo_issue_and_repo_issue_comment_format(repo_issue_and_repo_issue_comment)
 
         if table_name == 'repo_issue':
@@ -21,7 +21,7 @@ def get_table(table_name, recent_days):
             return repo_issue_comment
 
     elif table_name == 'repo_pull' or table_name == 'repo_pull_merged' or table_name == 'repo_review_comment':
-        repo_pull_and_repo_pull_merged_and_repo_review_comment = get_index_content('gitee_pulls-raw', recent_days, ["data.base.repo.id", "data.id", "data.number", "data.created_at", "data.merged_at", "data.state", "data.user.id", "data.review_comments_data.id", "data.review_comments_data.created_at", "data.review_comments_data.user.id"])
+        repo_pull_and_repo_pull_merged_and_repo_review_comment = get_index_content('gitee_pulls-raw', day_start_before, day_end_before, ["data.base.repo.id", "data.id", "data.number", "data.created_at", "data.merged_at", "data.state", "data.user.id", "data.review_comments_data.id", "data.review_comments_data.created_at", "data.review_comments_data.user.id"])
         repo_pull, repo_pull_merged, repo_review_comment = data_transformation.repo_pull_and_repo_pull_merged_and_repo_review_comment_format(repo_pull_and_repo_pull_merged_and_repo_review_comment)
 
         if table_name == 'repo_pull':
@@ -41,37 +41,38 @@ def get_table(table_name, recent_days):
     return None
 
 if __name__ == '__main__':
-    recent_days = 30
-    churn_search_repos_final = get_table('churn_search_repos_final', recent_days) # get_table 方法在 util.py 文件中, 需提前 from relative_path/util import get_table
-    repo_issue = get_table('repo_issue', recent_days)
-    repo_issue_comment = get_table('repo_issue_comment', recent_days)
-    repo_pull = get_table('repo_pull', recent_days)
-    repo_pull_merged = get_table('repo_pull_merged', recent_days)
-    repo_review_comment = get_table('repo_review_comment', recent_days)
+    day_start_before = 30
+    day_end_before = 7
+    churn_search_repos_final = get_table('churn_search_repos_final', day_start_before, day_end_before) # get_table 方法在 util.py 文件中, 需提前 from relative_path/util import get_table
+    repo_issue = get_table('repo_issue', day_start_before, day_end_before)
+    repo_issue_comment = get_table('repo_issue_comment', day_start_before, day_end_before)
+    repo_pull = get_table('repo_pull', day_start_before, day_end_before)
+    repo_pull_merged = get_table('repo_pull_merged', day_start_before, day_end_before)
+    repo_review_comment = get_table('repo_review_comment', day_start_before, day_end_before)
 
-    print('churn_search_repos_final: {} records in total within {} days'.format(len(churn_search_repos_final), recent_days))
+    print('churn_search_repos_final: {} records in total from {} days before to {} days before'.format(len(churn_search_repos_final), day_start_before, day_end_before))
     print(churn_search_repos_final[0].keys())
     print(churn_search_repos_final[:2])
     print('\n')
 
-    print('repo_issue: {} records in total within {} days'.format(len(repo_issue), recent_days))
+    print('repo_issue: {} records in total from {} days before to {} days before'.format(len(repo_issue), day_start_before, day_end_before))
     print(repo_issue[0].keys())
     print(repo_issue[:2])
     print('\n')
-    print('repo_issue_comment: {} records in total within {} days'.format(len(repo_issue_comment), recent_days))
+    print('repo_issue_comment: {} records in total from {} days before to {} days before'.format(len(repo_issue_comment), day_start_before, day_end_before))
     print(repo_issue_comment[0].keys())
     print(repo_issue_comment[:2])
     print('\n')
 
-    print('repo_pull: {} records in total within {} days'.format(len(repo_pull), recent_days))
+    print('repo_pull: {} records in total from {} days before to {} days before'.format(len(repo_pull), day_start_before, day_end_before))
     print(repo_pull[0].keys())
     print(repo_pull[:2])
     print('\n')
-    print('repo_pull_merged: {} records in total within {} days'.format(len(repo_pull_merged), recent_days))
+    print('repo_pull_merged: {} records in total from {} days before to {} days before'.format(len(repo_pull_merged), day_start_before, day_end_before))
     print(repo_pull_merged[0].keys())
     print(repo_pull_merged[:2])
     print('\n')
-    print('repo_review_comment: {} records in total within {} days'.format(len(repo_review_comment), recent_days))
+    print('repo_review_comment: {} records in total from {} days before to {} days before'.format(len(repo_review_comment), day_start_before, day_end_before))
     print(repo_review_comment[0].keys())
     print(repo_review_comment[:2])
     print('\n')

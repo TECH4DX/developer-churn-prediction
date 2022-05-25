@@ -22,7 +22,7 @@ def get_client():
     return client
 
 
-def query_within_days(days, fields):
+def query_within_days(day_start_before, day_end_before, fields):
     # Search for the document.
     day_timestamp = 86400 # timestamp for one day
     cur_timestamp = int(time.time())
@@ -41,8 +41,8 @@ def query_within_days(days, fields):
                     {
                         "range": {
                             "timestamp": {
-                                "gte": cur_timestamp - day_timestamp * days,
-                                "lte": cur_timestamp
+                                "gte": cur_timestamp - day_timestamp * day_start_before,
+                                "lte": cur_timestamp - day_timestamp * day_end_before
                             }
                         }
                     }
@@ -62,10 +62,10 @@ def query_within_days(days, fields):
     return query
 
 
-def get_index_content(index_name, days, fields):
+def get_index_content(index_name, day_start_before, day_end_before, fields):
     # Create an index with non-default settings.
     response = helpers.scan(
-        client=get_client(), index=index_name, query=query_within_days(days, fields))
+        client=get_client(), index=index_name, query=query_within_days(day_start_before, day_end_before, fields))
 
     response = [record for record in response]
 
@@ -73,10 +73,11 @@ def get_index_content(index_name, days, fields):
 
 
 # if __name__ == '__main__':
-    # recent_days = 7
-    # response_gitee_raw = get_index_content('gitee-raw', recent_days)
+    # day_start_before = 30
+    # day_end_before = 7
+    # response_gitee_raw = get_index_content('gitee-raw', day_start_before, day_end_before)
 
-    # print("\n\nindex: {}\n{}天内共{}条记录".format(
-    #     'gitee-raw', recent_days, len(response_gitee_raw)))
+    # print("{} records in total from {} days before to {} days before".format(
+    #     len(response_gitee_raw), day_start_before, day_end_before))
     # print(response_gitee_raw[0].keys())
     # print(response_gitee_raw[0]['_source'].keys())
