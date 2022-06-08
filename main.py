@@ -1,50 +1,48 @@
-from util import get_table
+from data_preprocess.preprocess import prediction_data_preprocess, get_existed_prediction_data
+from joblib import dump, load
+from collections import Counter
+import os
 
-def test():
-    recent_days = 30
-    churn_search_repos_final = get_table('churn_search_repos_final', recent_days) # get_table 方法在 util.py 文件中, 需提前 from relative_path/util import get_table
-    repo_issue = get_table('repo_issue', recent_days)
-    repo_issue_comment = get_table('repo_issue_comment', recent_days)
-    repo_pull = get_table('repo_pull', recent_days)
-    repo_pull_merged = get_table('repo_pull_merged', recent_days)
-    repo_review_comment = get_table('repo_review_comment', recent_days)
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/developer-churn-prediction')
 
-    print('churn_search_repos_final: {} records in total within {} days'.format(len(churn_search_repos_final), recent_days))
-    print(churn_search_repos_final[0].keys())
-    print(churn_search_repos_final[:2])
-    print('\n')
+# todo: Call the model training here, should add a paras to control whether to re-train or not
 
-    print('repo_issue: {} records in total within {} days'.format(len(repo_issue), recent_days))
-    print(repo_issue[0].keys())
-    print(repo_issue[:2])
-    print('\n')
-    print('repo_issue_comment: {} records in total within {} days'.format(len(repo_issue_comment), recent_days))
-    print(repo_issue_comment[0].keys())
-    print(repo_issue_comment[:2])
-    print('\n')
+# data preprocess here
+repo_ids = os.environ.get('REPO_IDS', [8649239])
+period_length = os.environ.get('PEIROD_LENGTH', 120)
+churn_limit_weeks = os.environ.get('CHURN_LIMIT_WEEKS', 14)
+time_threshold_days = os.environ.get('TIME_THRESHOLD_DAYS', 28)
 
-    print('repo_pull: {} records in total within {} days'.format(len(repo_pull), recent_days))
-    print(repo_pull[0].keys())
-    print(repo_pull[:2])
-    print('\n')
-    print('repo_pull_merged: {} records in total within {} days'.format(len(repo_pull_merged), recent_days))
-    print(repo_pull_merged[0].keys())
-    print(repo_pull_merged[:2])
-    print('\n')
-    print('repo_review_comment: {} records in total within {} days'.format(len(repo_review_comment), recent_days))
-    print(repo_review_comment[0].keys())
-    print(repo_review_comment[:2])
-    print('\n')
+for repo_id in repo_ids:
+    # model prediction periodically here
+    train_data_dir = './data_preprocess/train_data'
+    prediction_data_dir = './data_preprocess/prediction_data'
 
-if __name__ == '__main__':
-    test() # Only used to test whether the data transformation works well.
-    
-    # todo: Call the data preprocess here
+    # 生成预测数据集，并返回
+    user_id_list,input_data = prediction_data_preprocess(repo_id,train_data_dir,prediction_data_dir,
+                                                         period_length,churn_limit_weeks,time_threshold_days)
+    print(user_id_list)
+    print(input_data)
 
-    # todo: Call the model training here, should add a paras to control whether to re-train or not
+    prediction_file = prediction_data_dir+'/repo_'+str(repo_id)+'/normalized_data'
+    # 根据生成的预测数据集文件，直接返回数据
+    user_id_list,input_data = get_existed_prediction_data(prediction_file)
+    print(len(user_id_list))
+    print(input_data.shape)
 
-    # todo: Call the model prediction periodically here
+    # 加载训练好的模型，对input_data进行预测
+    # model_path = './prediction_models/xgboost_models/2022-06-03_15-16-04xgboost_best_model_roc_auc-120-0.0.joblib'
+    model_path = './prediction_models/xgboost_models/2022-06-03_15-16-04xgboost_best_model_roc_auc-120-0.0.joblib'
+    # model_path = './prediction_models/rf_models/2022-06-03_15-11-48rf_best_model_roc_auc-120-0.0.joblib'
+    # model_path = './prediction_models/adaboost_models/2022-06-03_15-15-13adaboost_best_model_roc_auc-120-0.0.joblib'
+    # model_path = './prediction_models/svm_models/2022-06-03_15-06-53svm_best_model_roc_auc-120-0.0.joblib'
+    model = load(model_path)
+    y_pred = model.predict(input_data)
 
-    # todo: Return the prediction result here
+    # Return the prediction result here
+    for i in range(len(user_id_list)):
+        print(user_id_list[i],'\t\t',y_pred[i])
+    print(Counter(y_pred))
 
     
