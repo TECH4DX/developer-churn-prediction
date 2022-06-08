@@ -8,7 +8,6 @@ def get_client():
     port = os.environ.get('OPEN_SEARCH_PORT', '')
     auth = (os.environ.get('OPEN_SEARCH_USER', ''),  os.environ.get('OPEN_SEARCH_PASSWORD', ''))
 
-
     client = OpenSearch(
         hosts=[{'host': host, 'port': port}],
         http_compress=False,  # enables gzip compression for request bodies
@@ -71,14 +70,3 @@ def get_index_content(index_name, day_start_before, day_end_before, fields):
     response = [record for record in response]
 
     return response
-
-
-# if __name__ == '__main__':
-    # day_start_before = 30
-    # day_end_before = 7
-    # response_gitee_raw = get_index_content('gitee-raw', day_start_before, day_end_before)
-
-    # print("{} records in total from {} days before to {} days before".format(
-    #     len(response_gitee_raw), day_start_before, day_end_before))
-    # print(response_gitee_raw[0].keys())
-    # print(response_gitee_raw[0]['_source'].keys())

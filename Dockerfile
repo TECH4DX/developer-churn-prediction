@@ -7,7 +7,7 @@ FROM python:3.8.12-slim-buster
 COPY --from=0 /developer-churn-prediction /developer-churn-prediction
 WORKDIR /developer-churn-prediction
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 RUN chmod +x ./run.sh
 
