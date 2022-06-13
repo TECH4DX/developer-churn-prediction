@@ -1,0 +1,12 @@
+time:2022-06-12 18:33:35
+eta:0.1
+n_estimators:110
+gamma:0.01
+max_depth:8
+min_child_weight:1
+colsample_bytree:0.7000000000000001
+colsample_bylevel:1
+subsample:1.0
+reg_lambda:6.0
+reg_alpha:0.0
+seed:33

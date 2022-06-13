@@ -36,10 +36,16 @@ prediction_data_dir = 'prediction_data' '''
 # churn_limit_weeks: 流失期限，默认14周
 # train_end_time: 用于获取训练数据的截止时间，（开始时间是仓库创建时间）
 # continue_runing: 是否在处理数据过程中不间断运行，默认为True
-# time_threshold_percentile: 用于划分开发者的百分位数，默认为80，即剔除活动时间少于第80百分位数的开发者
+# time_threshold: 用于划分开发者的百分位数，若大于0小于1表示对应百分位数；若为整数则表示具体天数。默认为0.8，即剔除活动时间少于第80百分位数的开发者
+# 返回值：可直接输入模型训练的数据存储路径；筛选开发者的阈值（单位是天）
 def train_data_preprocess(repo_id,train_data_dir,period_length=120,overlap_ratio=0.0,churn_limit_weeks=14,
                           train_end_time = '2022-01-01',continue_running=False,
-                          time_threshold_percentile=80):
+                          time_threshold=0.8):
+    if 0 < time_threshold < 1:
+        time_threshold_percentile = int(time_threshold * 100)
+    else:
+        time_threshold_percentile = 80
+
     user_type_list = ['churner', 'loyaler']
 
     repo_info = getRepoInfoFromTable(repo_id,['created_at'])
@@ -65,7 +71,9 @@ def train_data_preprocess(repo_id,train_data_dir,period_length=120,overlap_ratio
         return
     print('\nStep2: get active period for all users.')
     # ② 获取所有流失用户和留存用户的连续活动时间（第一次活动和最后一次活动时间）
-    saveUserActivePeriod(repo_id,create_time,train_end_time,repo_data_dir,churn_limit_weeks,time_threshold_percentile)
+    time_threshold_days = int(
+        saveUserActivePeriod(repo_id, create_time, train_end_time, repo_data_dir, churn_limit_weeks,
+                             time_threshold_percentile))
 
     if continue_running:
         s = 'Y'
@@ -76,8 +84,14 @@ def train_data_preprocess(repo_id,train_data_dir,period_length=120,overlap_ratio
     print('\nStep3: get users and correspond period for model training.')
     # ③ 获取剔除不重要开发者（活动时间少于第90百分位数）后，分成churner和loyaler两部分，并生成重要开发者的取样区间
     for user_type in user_type_list:
-        getModelUserPeriod(repo_id, user_type, repo_data_dir, repo_data_dir + '/' + str(repo_id) + '_user_active_period.csv',
-                           churn_limit_weeks,period_length,overlap_ratio,time_threshold=-1)
+        if 0 < time_threshold < 1:
+            getModelUserPeriod(repo_id, user_type, repo_data_dir,
+                               repo_data_dir + '/' + str(repo_id) + '_user_active_period.csv',
+                               churn_limit_weeks, period_length, overlap_ratio, time_threshold=-1)
+        else:
+            getModelUserPeriod(repo_id, user_type, repo_data_dir,
+                               repo_data_dir + '/' + str(repo_id) + '_user_active_period.csv',
+                               churn_limit_weeks, period_length, overlap_ratio, time_threshold=time_threshold)
 
     if continue_running:
         s = 'Y'
@@ -126,6 +140,7 @@ def train_data_preprocess(repo_id,train_data_dir,period_length=120,overlap_ratio
     getSplitBanlancedDataAndSave(repo_data_dir + '/normalized_data', repo_data_dir + '/split_balanced_data',
                                     period_length, overlap_ratio, data_type_list,1,split_ratio=0.8)
     print('Data preprocessing finished.')
+    return time_threshold_days
 
 
 # 获取近期需要预测的开发者的数据，该函数会在prediction_data文件夹创建相应数据文件，并返回可输入模型的数据

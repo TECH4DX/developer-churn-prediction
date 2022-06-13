@@ -1,0 +1,4 @@
+time:2022-06-12 13:15:04
+n_estimators:1090
+dt_max_depth:4
+learning_rate:0.21544346900318834

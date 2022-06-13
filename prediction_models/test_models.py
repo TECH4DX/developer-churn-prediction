@@ -1,8 +1,8 @@
 from sklearn.metrics import accuracy_score,roc_auc_score,precision_score,recall_score,f1_score,classification_report
-from prediction_models.train_svm import trainSVM,gridSearchForSVM,getModelData
-from prediction_models.train_rf import trainRF,gridSearchForRF
-from prediction_models.train_xgboost import trainXGBoost,gridSearchForXGBoost
-from prediction_models.train_adaboost import trainMyAdaBoost,trainAdaBoost,gridSearchForAdaBoost
+from prediction_models.train_svm import *
+from prediction_models.train_rf import *
+from prediction_models.train_xgboost import *
+from prediction_models.train_adaboost import *
 import time
 from collections import Counter
 from joblib import dump, load
@@ -16,8 +16,8 @@ if __name__ == '__main__':
     # id = 25
     id_list = [20]
     for id in id_list:
-        split_balanced_data_dir = r'F:\MOOSE_cxy\churn_prediction\data_preprocess\data\repo_'\
-                                  +str(id)+'\part_all\split_balanced_data'
+        split_balanced_data_dir = 'F:/MOOSE_cxy/churn_prediction/data_preprocess/data/repo_'\
+                                  +str(id)+'/part_all/split_balanced_data'
         period_length = 120
         overlap_ratio = 0.0
         data_type_count = 9  # Gitee
@@ -44,20 +44,20 @@ if __name__ == '__main__':
         # split_balanced_data_dir = r'F:\MOOSE_cxy\developer_churn_prediction\churn_prediction\data_preprocess\data\repo_2\part_2\split_balanced_data'
 
         period_length_list = [120]#120,30
-        overlap_ratio_list = [0.0,0.5]
+        overlap_ratio_list = [0.0]
         scoring_list = ['roc_auc']#,'accuracy','precision'
         for scoring in scoring_list:
             for period in period_length_list:
                 for overlap in overlap_ratio_list:
                     gridSearchForSVM(split_balanced_data_dir, period, overlap, data_type_count,scoring=scoring)
-                    gridSearchForRF(split_balanced_data_dir, period, overlap, data_type_count, scoring=scoring)
-                    time.sleep(10)
-                    gridSearchForAdaBoost(split_balanced_data_dir, period, overlap, data_type_count,
-                                          scoring=scoring)
-                    time.sleep(10)
-                    gridSearchForXGBoost(split_balanced_data_dir, period, overlap, data_type_count,
-                                         scoring=scoring)
-                    time.sleep(20)
+                    # gridSearchForRF(split_balanced_data_dir, period, overlap, data_type_count, scoring=scoring)
+                    # time.sleep(10)
+                    # gridSearchForAdaBoost(split_balanced_data_dir, period, overlap, data_type_count,
+                    #                       scoring=scoring)
+                    # time.sleep(10)
+                    # gridSearchForXGBoost(split_balanced_data_dir, period, overlap, data_type_count,
+                    #                      scoring=scoring)
+                    # time.sleep(20)
 
 
     '''model_type = 'xgboost'  # svm,rf,xgboost,adaboost

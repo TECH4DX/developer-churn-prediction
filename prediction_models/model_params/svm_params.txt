@@ -1,0 +1,4 @@
+time:2022-06-12 12:58:54
+C:100
+gamma:10
+kernel:rbf
